@@ -67,7 +67,7 @@ View all projects live on GitHub Pages:
 ---
 
 ## 🔹 Screenshots
-> (Replace these with actual screenshots of each project)
+> (Main Dashboard Preview)
 
 ![Dashboard Screenshot](images/JavaScript%20Projects.png)
 ![Calculator Screenshot](calculator/screenshot.png)
