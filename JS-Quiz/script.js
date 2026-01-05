@@ -21,6 +21,22 @@ let state = {
 
 let interval;
 
+function saveState() {
+  localStorage.setItem('quizState', JSON.stringify(state));
+}
+
+function loadState() {
+  const saved = localStorage.getItem('quizState');
+  if (saved) {
+    state = JSON.parse(saved);
+    scoreEl.textContent = `Score: ${state.score}`;
+    progressBar.style.width = ((state.index) / state.questions.length) * 100 + "%";
+    dashboard.style.display = "none";
+    quiz.style.display = "block";
+    loadQuestion();
+  }
+}
+
 // Initialize high score
 highScoreEl.textContent = localStorage.getItem("highScore") || 0;
 
@@ -28,6 +44,8 @@ highScoreEl.textContent = localStorage.getItem("highScore") || 0;
 if (localStorage.getItem("theme") === "light") {
   document.body.classList.add("light");
 }
+
+loadState();
 
 // 🌐 Fetch from API
 async function fetchQuestions() {
@@ -38,12 +56,12 @@ async function fetchQuestions() {
   );
   const data = await res.json();
   state.questions = data.results;
+  saveState();
   loadQuestion();
 }
 
 function loadQuestion() {
   reset();
-  startTimer();
 
   const q = state.questions[state.index];
   questionEl.innerHTML = q.question;
@@ -60,6 +78,8 @@ function loadQuestion() {
 
   progressBar.style.width =
     ((state.index + 1) / state.questions.length) * 100 + "%";
+  saveState();
+  startTimer();
 }
 
 function checkAnswer(btn, correct) {
@@ -74,6 +94,8 @@ function checkAnswer(btn, correct) {
 
   scoreEl.textContent = `Score: ${state.score}`;
 
+  saveState();
+
   [...optionsEl.children].forEach(b => {
     b.disabled = true;
     if (b.innerHTML === state.questions[state.index].correct_answer) {
@@ -85,14 +107,20 @@ function checkAnswer(btn, correct) {
 }
 
 function startTimer() {
-  state.timer = 30;
-  timerEl.textContent = "30s";
+  timerEl.textContent = state.timer + "s";
 
   interval = setInterval(() => {
     state.timer--;
     timerEl.textContent = state.timer + "s";
+    saveState();
     if (state.timer === 0) {
       stopTimer();
+      [...optionsEl.children].forEach(b => {
+        b.disabled = true;
+        if (b.innerHTML === state.questions[state.index].correct_answer) {
+          b.classList.add("correct");
+        }
+      });
       nextBtn.style.display = "block";
     }
   }, 1000);
@@ -109,6 +137,7 @@ function reset() {
 
 nextBtn.onclick = () => {
   state.index++;
+  saveState();
   state.index < state.questions.length ? loadQuestion() : finish();
 };
 
@@ -118,6 +147,8 @@ function finish() {
     localStorage.setItem("highScore", state.score);
     highScoreEl.textContent = state.score;
   }
+
+  localStorage.removeItem('quizState');
 
   questionEl.innerHTML = `
     🎉 Final Score: ${state.score}<br>
@@ -140,6 +171,7 @@ function resetState() {
   scoreEl.textContent = "Score: 0";
   progressBar.style.width = "0%";
   nextBtn.innerText = "Next";
+  localStorage.removeItem('quizState');
 }
 
 // 🌗 Theme Toggle
